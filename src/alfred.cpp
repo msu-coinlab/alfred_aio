@@ -642,6 +642,9 @@ bool send_json_streams(std::string scenario_id,
     json core = json::parse(core_str);
     json scenario = json::parse(scenario_str);
     json geography = json::parse(geography_str);
+    std::cout << "scenario_str: " << scenario_str << std::endl;
+    std::cout << "geography_str: " << geography_str << std::endl;
+    std::cout << "core_str: " << core_str << std::endl;
     core["DataTransferObject"]["Id"] = scenario_id_int;
     core["DataTransferObject"]["FileId"] = exec_uuid;
     scenario["ScenarioId"] = scenario_id_int;
@@ -760,11 +763,13 @@ bool send_files(std::string scenario_id, std::string emo_uuid, std::string exec_
     if (std::filesystem::exists(animal_filename) &&
         awss3::put_object("cast-optimization-dev", animal_path, animal_filename)) {
         file_sent = true;
+        fmt::print("animal file sent: scenario_id: {}, exec_id: {}\n", scenario_id, exec_uuid);
     }
 
     if (std::filesystem::exists(manuretransport_filename) &&
         awss3::put_object("cast-optimization-dev", manuretransport_path, manuretransport_filename)) {
         file_sent = true;
+        fmt::print("manuretransport file sent: scenario_id: {}, exec_id: {}\n", scenario_id, exec_uuid);
     }
 
     return file_sent;
