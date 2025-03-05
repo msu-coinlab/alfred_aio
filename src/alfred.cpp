@@ -679,7 +679,6 @@ bool send_json_streams(std::string scenario_id,
 
         if (awss3::put_object_buffer("cast-optimization-dev", scenario_geography_path, geography.dump()) == false)
             return false;
-
         wait_for_file(scenario_geography_path);
 
         //delete
@@ -693,8 +692,6 @@ bool send_json_streams(std::string scenario_id,
         std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(seconds));
         if (awss3::is_object("cast-optimization-dev", reportloads_path) == true)
             return false;
-
-
         if (awss3::put_object_buffer("cast-optimization-dev", core_path, core.dump()) == true)
             return true;
 
@@ -1045,7 +1042,6 @@ bool execute_20(std::string scenario_id, std::string emo_uuid, std::string exec_
 }
 
 void retrieve_exec() {
-
     std::vector<std::string> to_retrieve_list;
     redis.lrange("retrieving_queue", 0, -1, std::back_inserter(to_retrieve_list));
     int n_to_retrieve = to_retrieve_list.size();
@@ -1145,7 +1141,6 @@ void retrieve_exec() {
 //}
 
 bool emo_to_initialize(std::string emo_uuid) {
-
     auto scenario_id = *redis.hget("emo_to_initialize", emo_uuid);
     auto [core, scenario, geography] = create_jsons(scenario_id, emo_uuid);
     auto core_str = *redis.hget(emo_uuid, "core");
@@ -1160,7 +1155,6 @@ bool emo_to_initialize(std::string emo_uuid) {
 
     if (send_json_streams(scenario_id, emo_uuid, exec_uuid) == true) {
         std::cout << fmt::format("emo_to_initialize emo_uuid: {} scenario_id: {}\n", emo_uuid, scenario_id);
-
         auto cinfo =  fmt::format("[Initialzing] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
         redis.hset("exec_to_retrieve", exec_uuid, fmt::format("{}_{}", emo_uuid, scenario_id));
         redis.rpush("retrieving_queue", exec_uuid);
@@ -1169,7 +1163,6 @@ bool emo_to_initialize(std::string emo_uuid) {
         //redis.rpush("added_to_retrieving_queue", fmt::format("{}", get_time()));
         cinfo =  fmt::format("[Retrieving QUEUE] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
         if (redis.hdel("emo_to_initialize", emo_uuid)) {
-
             cinfo =  fmt::format("[EMO Initialized and removed from queue] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
         } else {
             auto cerror =  fmt::format("[[DELETE EMO FROM INITALIZED FAILED] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
@@ -1268,7 +1261,6 @@ bool check_amqp() {
 }
 
 void send() {
-
     AmqpClient::Channel::OpenOpts opts;
     opts.host = AMQP_HOST;
     opts.port = std::stoi(AMQP_PORT);
@@ -1294,7 +1286,6 @@ void send() {
         auto cinfo =  fmt::format("Queue with name {} has been declared.\n", queue_name);
         channel->BindQueue(queue_name, EXCHANGE_NAME, "opt4cast_initialization");
         channel->BindQueue(queue_name, EXCHANGE_NAME, "opt4cast_execution");
-
         channel->BindQueue(queue_name, EXCHANGE_NAME, "opt4cast_mathmodel_execution");
         channel->BindQueue(queue_name, EXCHANGE_NAME, "opt4cast_begin_generation");
         channel->BindQueue(queue_name, EXCHANGE_NAME, "opt4cast_end_generation");
