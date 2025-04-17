@@ -663,7 +663,9 @@ bool send_json_streams(std::string scenario_id,
     std::string impbmpsubmittedland_path = fmt::format("data/scenarios/metadata/impbmpsubmittedland/scenarioid={}/impbmpsubmittedland.parquet", scenario_id);
     fmt::print("impbmpsubmittedland_path: {}\n", impbmpsubmittedland_path);
     std::string impbmpsubmittedanimal_path = fmt::format("data/scenarios/metadata/impbmpsubmittedanimal/scenarioid={}/impbmpsubmittedanimal.parquet", scenario_id);
+    fmt::print("impbmpsubmittedanimal_path: {}\n", impbmpsubmittedanimal_path);
     std::string impbmpsubmittedmanuretransport_path = fmt::format("data/scenarios/metadata/impbmpsubmittedmanuretransport/scenarioid={}/impbmpsubmittedmanuretransport.parquet", scenario_id);
+    fmt::print("impbmpsubmittedmanuretransport_path: {}\n", impbmpsubmittedmanuretransport_path);
     //output
     std::string reportloads_path = fmt::format("data/scenarios/modeloutput/reportloads/scenarioid={}/reportloads.parquet", scenario_id);
     //thrigger
@@ -739,6 +741,7 @@ bool send_submitted_land(std::string scenario_id, std::string emo_uuid, std::str
 }
 
 bool send_files(std::string scenario_id, std::string emo_uuid, std::string exec_uuid) {
+    fmt::print("sending files for scenario_id: {}, emo_uuid: {}, exec_uuid: {}\n", scenario_id, emo_uuid, exec_uuid);
     auto land_path = fmt::format("data/scenarios/metadata/impbmpsubmittedland/scenarioid={}/impbmpsubmittedland.parquet", scenario_id);
     auto land_filename = fmt::format("{}/output/nsga3/{}/{}_impbmpsubmittedland.parquet", msu_cbpo_path, emo_uuid, exec_uuid);
     auto animal_path = fmt::format("data/scenarios/metadata/impbmpsubmittedanimal/scenarioid={}/impbmpsubmittedanimal.parquet", scenario_id);
@@ -1153,6 +1156,9 @@ bool emo_to_initialize(std::string emo_uuid) {
     //std::ofstream bmp_grp_src_vec_file(filename);
     //bmp_grp_src_vec_file.precision(2);
 
+    // first send the BMP input files
+    send_files(scenario_id, emo_uuid, exec_uuid);
+        // then send the json streams
     if (send_json_streams(scenario_id, emo_uuid, exec_uuid) == true) {
         std::cout << fmt::format("emo_to_initialize emo_uuid: {} scenario_id: {}\n", emo_uuid, scenario_id);
         auto cinfo =  fmt::format("[Initialzing] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
@@ -1172,6 +1178,7 @@ bool emo_to_initialize(std::string emo_uuid) {
         std::clog << "it did not sent \n";
         auto cerror = fmt::format("[INITIALIZZATION_FAILED] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
     }
+    
     //start_time[emo_uuid] = datetime.datetime.now()
     return true;
 }
