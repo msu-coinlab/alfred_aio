@@ -690,13 +690,12 @@ bool send_json_streams(std::string scenario_id,
             awss3::delete_object("cast-optimization-dev", impbmpsubmittedmanuretransport_path);
         }
         awss3::delete_object("cast-optimization-dev", reportloads_path);
-        if (awss3::put_object_buffer("cast-optimization-dev", core_path, core.dump()) == false)
-            return false;
-        int seconds = 5;
+        int seconds = 2;
         std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(seconds));
         if (awss3::is_object("cast-optimization-dev", reportloads_path) == true)
+            return false;
+        if (awss3::put_object_buffer("cast-optimization-dev", core_path, core.dump()) == true)
             return true;
-        return false;
 
     }
     catch (const std::exception &error) {
@@ -1165,10 +1164,10 @@ bool emo_to_initialize(std::string emo_uuid) {
         auto cinfo =  fmt::format("[Initialzing] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
         redis.hset("exec_to_retrieve", exec_uuid, fmt::format("{}_{}", emo_uuid, scenario_id));
         redis.rpush("retrieving_queue", exec_uuid);
+
         redis.hset("started_time", exec_uuid, fmt::format("{}", get_time()));
         //redis.rpush("added_to_retrieving_queue", fmt::format("{}", get_time()));
         cinfo =  fmt::format("[Retrieving QUEUE] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
-
         if (redis.hdel("emo_to_initialize", emo_uuid)) {
             cinfo =  fmt::format("[EMO Initialized and removed from queue] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
         } else {
@@ -1176,7 +1175,7 @@ bool emo_to_initialize(std::string emo_uuid) {
         }
     } else {
         redis.rpush("emo_failed_to_initialize", emo_uuid);
-        std::clog << "it was not sent \n";
+        std::clog << "it did not sent \n";
         auto cerror = fmt::format("[INITIALIZZATION_FAILED] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
     }
     
@@ -1491,4 +1490,3 @@ int main(int argc, char const *argv[]) {
     ShutdownAPI(aws_options);
     return 0;
 }
-
