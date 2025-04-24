@@ -261,7 +261,7 @@ namespace awss3 {
                            const std::string &object_content,
                            const Aws::String &region = "us-east-1") {
 
-        bool ret = true;
+        bool ret = false;
         Aws::Client::ClientConfiguration config;
 
         if (!region.empty()) {
@@ -642,12 +642,14 @@ bool send_json_streams(std::string scenario_id,
     json core = json::parse(core_str);
     json scenario = json::parse(scenario_str);
     json geography = json::parse(geography_str);
-    std::cout << "scenario_str: " << scenario_str << std::endl;
-    std::cout << "geography_str: " << geography_str << std::endl;
-    std::cout << "core_str: " << core_str << std::endl;
     core["DataTransferObject"]["Id"] = scenario_id_int;
     core["DataTransferObject"]["FileId"] = exec_uuid;
     scenario["ScenarioId"] = scenario_id_int;
+
+    std::cout << "scenario_id_int: " << scenario_id_int << std::endl;
+    std::cout << "scenario_str: " << scenario_str << std::endl;
+    std::cout << "geography_str: " << geography_str << std::endl;
+    std::cout << "core_str: " << core_str << std::endl;
 
     //std::clog<<core<<std::endl;
 
@@ -656,22 +658,22 @@ bool send_json_streams(std::string scenario_id,
     }
     //scenarios:
     std::string scenario_path = fmt::format("data/scenarios/metadata/scenario/scenarioid={}/scenario.json", scenario_id);
-    fmt::print("scenario_path: {}\n", scenario_path);
+    std::cout << "scenario_path: " << scenario_path << std::endl;
     std::string scenario_geography_path = fmt::format("data/scenarios/metadata/scenariogeography/scenarioid={}/scenariogeography.json", scenario_id);
-    fmt::print("scenario_geography_path: {}\n", scenario_geography_path);
+    std::cout << "scenario_geography_path: " << scenario_geography_path << std::endl;
     //bmps
     std::string impbmpsubmittedland_path = fmt::format("data/scenarios/metadata/impbmpsubmittedland/scenarioid={}/impbmpsubmittedland.parquet", scenario_id);
-    fmt::print("impbmpsubmittedland_path: {}\n", impbmpsubmittedland_path);
+    std::cout << "impbmpsubmittedland_path: " << impbmpsubmittedland_path << std::endl;
     std::string impbmpsubmittedanimal_path = fmt::format("data/scenarios/metadata/impbmpsubmittedanimal/scenarioid={}/impbmpsubmittedanimal.parquet", scenario_id);
-    fmt::print("impbmpsubmittedanimal_path: {}\n", impbmpsubmittedanimal_path);
+    std::cout << "impbmpsubmittedanimal_path: " << impbmpsubmittedanimal_path << std::endl;
     std::string impbmpsubmittedmanuretransport_path = fmt::format("data/scenarios/metadata/impbmpsubmittedmanuretransport/scenarioid={}/impbmpsubmittedmanuretransport.parquet", scenario_id);
-    fmt::print("impbmpsubmittedmanuretransport_path: {}\n", impbmpsubmittedmanuretransport_path);
+    std::cout << "impbmpsubmittedmanuretransport_path: " << impbmpsubmittedmanuretransport_path << std::endl;
     //output
     std::string reportloads_path = fmt::format("data/scenarios/modeloutput/reportloads/scenarioid={}/reportloads.parquet", scenario_id);
     //thrigger
 
     std::string core_path = fmt::format("lambdarequests/optimize/optimizeSce_{}.json", exec_uuid);
-    fmt::print("core_path: {}\n", core_path);
+    std::cout << "core_path: " << core_path << std::endl;
 
     try {
         if (awss3::put_object_buffer("cast-optimization-dev", scenario_path, scenario.dump()) == false)
@@ -690,12 +692,21 @@ bool send_json_streams(std::string scenario_id,
             awss3::delete_object("cast-optimization-dev", impbmpsubmittedmanuretransport_path);
         }
         awss3::delete_object("cast-optimization-dev", reportloads_path);
+        awss3::delete_object("cast-optimization-dev", core_path);
+        
         int seconds = 2;
         std::this_thread::sleep_until(std::chrono::system_clock::now() + std::chrono::seconds(seconds));
         if (awss3::is_object("cast-optimization-dev", reportloads_path) == true)
             return false;
-        if (awss3::put_object_buffer("cast-optimization-dev", core_path, core.dump()) == true)
-            return true;
+        try {
+            if (awss3::put_object_buffer("cast-optimization-dev", core_path, core.dump())) {
+                std::cout << "sending to lambda core_path: " << core_path << std::endl;
+                return true;
+            }
+        } catch (const std::exception &error) {
+            auto cerror = fmt::format("Could not send the lambda request: {}", error.what());
+            std::cout << cerror << "\n";
+        }
 
     }
     catch (const std::exception &error) {
@@ -1157,26 +1168,31 @@ bool emo_to_initialize(std::string emo_uuid) {
     //bmp_grp_src_vec_file.precision(2);
 
     // first send the BMP input files
-    send_files(scenario_id, emo_uuid, exec_uuid);
-        // then send the json streams
-    if (send_json_streams(scenario_id, emo_uuid, exec_uuid) == true) {
-        std::cout << fmt::format("emo_to_initialize emo_uuid: {} scenario_id: {}\n", emo_uuid, scenario_id);
-        auto cinfo =  fmt::format("[Initialzing] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
-        redis.hset("exec_to_retrieve", exec_uuid, fmt::format("{}_{}", emo_uuid, scenario_id));
-        redis.rpush("retrieving_queue", exec_uuid);
+    if (send_files(scenario_id, emo_uuid, exec_uuid) == true) {
+        if (send_json_streams(scenario_id, emo_uuid, exec_uuid, false) == true) {
+            std::cout << fmt::format("emo_to_initialize emo_uuid: {} scenario_id: {}\n", emo_uuid, scenario_id);
+            auto cinfo =  fmt::format("[Initialzing] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
+            redis.hset("exec_to_retrieve", exec_uuid, fmt::format("{}_{}", emo_uuid, scenario_id));
+            redis.rpush("retrieving_queue", exec_uuid);
 
-        redis.hset("started_time", exec_uuid, fmt::format("{}", get_time()));
-        //redis.rpush("added_to_retrieving_queue", fmt::format("{}", get_time()));
-        cinfo =  fmt::format("[Retrieving QUEUE] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
-        if (redis.hdel("emo_to_initialize", emo_uuid)) {
-            cinfo =  fmt::format("[EMO Initialized and removed from queue] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
+            redis.hset("started_time", exec_uuid, fmt::format("{}", get_time()));
+            //redis.rpush("added_to_retrieving_queue", fmt::format("{}", get_time()));
+            cinfo =  fmt::format("[Retrieving QUEUE] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
+            if (redis.hdel("emo_to_initialize", emo_uuid)) {
+                cinfo =  fmt::format("[EMO Initialized and removed from queue] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
+            } else {
+                auto cerror =  fmt::format("[[DELETE EMO FROM INITALIZED FAILED] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
+            }
         } else {
-            auto cerror =  fmt::format("[[DELETE EMO FROM INITALIZED FAILED] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
+            redis.rpush("emo_failed_to_initialize", emo_uuid);
+            std::clog << "it was not sent \n";
+            auto cerror = fmt::format("[INITIALIZZATION_FAILED] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
         }
-    } else {
-        redis.rpush("emo_failed_to_initialize", emo_uuid);
-        std::clog << "it did not sent \n";
-        auto cerror = fmt::format("[INITIALIZZATION_FAILED] EMOO_UUID: {} Scenario ID: {}", emo_uuid, scenario_id);
+    }
+    else {
+            auto cerror =  fmt::format("[SEND_TO_EXECUTION_FAILED] EMOO_UUID: {} EXEC_UUID: {} Scenario ID: {}\n", emo_uuid, exec_uuid, scenario_id);
+            std::clog << cerror;
+            std::cout<<cerror<<"\n";
     }
     
     //start_time[emo_uuid] = datetime.datetime.now()
