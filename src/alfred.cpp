@@ -652,7 +652,7 @@ bool send_json_streams(std::string scenario_id,
     std::cout << "core_str: " << core_str << std::endl;
 
 
-    std::cout << "Testing to see if I can use the build image from the git hub" << std::endl;
+    //std::cout << "Testing to see if I can use the build image from the git hub" << std::endl;
     
 
     //std::clog<<core<<std::endl;
