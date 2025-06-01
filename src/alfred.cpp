@@ -623,10 +623,7 @@ std::tuple<json, json, json> create_jsons(std::string scenario_id, std::string e
 }
 
 
-bool send_json_streams(std::string scenario_id,
-                       std::string emo_uuid,
-                       std::string exec_uuid,
-                       bool del_files = true) {
+bool send_json_streams(std::string scenario_id, std::string emo_uuid, std::string exec_uuid, bool del_files = true) {
     std::string core_str;
     std::string scenario_str;
     std::string geography_str;
@@ -649,11 +646,7 @@ bool send_json_streams(std::string scenario_id,
     std::cout << "scenario_id_int: " << scenario_id_int << std::endl;
     std::cout << "scenario_str: " << scenario_str << std::endl;
     std::cout << "geography_str: " << geography_str << std::endl;
-    std::cout << "core_str: " << core_str << std::endl;
-
-
-    //std::cout << "Testing to see if I can use the build image from the git hub" << std::endl;
-    
+    std::cout << "core_str: " << core_str << std::endl;    
 
     //std::clog<<core<<std::endl;
 
@@ -772,19 +765,19 @@ bool send_files(std::string scenario_id, std::string emo_uuid, std::string exec_
     if (std::filesystem::exists(land_filename) &&
         awss3::put_object("cast-optimization-dev", land_path, land_filename)) {
         file_sent = true;
-        fmt::print("land file sent: scenario_id: {}, exec_id: {}\n", scenario_id, exec_uuid);
+        fmt::print("land file sent: scenario_id: {}, exec_id: {}, path: {}\n", scenario_id, exec_uuid, land_path);
     }
 
     if (std::filesystem::exists(animal_filename) &&
         awss3::put_object("cast-optimization-dev", animal_path, animal_filename)) {
         file_sent = true;
-        fmt::print("animal file sent: scenario_id: {}, exec_id: {}\n", scenario_id, exec_uuid);
+        fmt::print("animal file sent: scenario_id: {}, exec_id: {}, path: {}\n", scenario_id, exec_uuid, animal_path);
     }
 
     if (std::filesystem::exists(manuretransport_filename) &&
         awss3::put_object("cast-optimization-dev", manuretransport_path, manuretransport_filename)) {
         file_sent = true;
-        fmt::print("manuretransport file sent: scenario_id: {}, exec_id: {}\n", scenario_id, exec_uuid);
+        fmt::print("manuretransport file sent: scenario_id: {}, exec_id: {}, path: {}\n", scenario_id, exec_uuid, manuretransport_path);
     }
 
     return file_sent;
@@ -1034,6 +1027,10 @@ bool execute_20(std::string scenario_id, std::string emo_uuid, std::string exec_
             loads_filename = fmt::format("{}/output/nsga3/{}/{}_reportloads.parquet", msu_cbpo_path, emo_uuid, exec_uuid);
         }
         auto loads = read_loads(loads_filename);
+        std::cout << "Load file: " << loads_filename << std::endl;
+        for (auto load : loads) {
+            std::cout << "load: " << load << std::endl;
+        }
         redis.hset("executed_results", exec_uuid, fmt::format("{:.2f}_{:.2f}_{:.2f}", loads[0], loads[1], loads[2]));
 
 
