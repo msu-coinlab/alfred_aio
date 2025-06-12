@@ -609,7 +609,7 @@ std::tuple<json, json, json> create_jsons(std::string scenario_id, std::string e
     json data_transfer_object = json::parse(
             R"({ "CopyAg": [], "CopyDc": [], "CopyDe": [], "CopyMd": [], "CopyNy": [], "CopyPenn": [], "CopyVa": [], "CopyWva": [], "CopyNat": [], "CopySept": [], "CopyDev": [], "CopyPol": [], "CopySingle": [], "NeedsReRun": false, "IsPublic": false, "IsOptimizationMode": true, "NeedsValidation": false, "StatusId": 0, "Name": null, "Source": 0, "SourceDataVersion": "", "NetworkPath": "", "LandBmpImportFiles": [], "AimalBmpImportFiles": [], "ManureBmpImportFiles": [], "LandPolicyBmpImportFiles": [] })");
     data_transfer_object["Id"] = scenario_id_int;
-    data_transfer_object["FileId"] = exec_uuid;
+    data_transfer_object["FileId"] = replace_all(exec_uuid, "/", "_");
     data_transfer_object["UserData"] = user_data;
     json core = json::parse(R"({ "ProcessorFactory": "ScenarioProcessorFactory", "ProcessorServiceName": "ScenarioRunProcessor"})");
     core["DataTransferObject"] = data_transfer_object;
@@ -649,7 +649,7 @@ bool send_json_streams(std::string scenario_id, std::string emo_uuid, std::strin
     json scenario = json::parse(scenario_str);
     json geography = json::parse(geography_str);
     core["DataTransferObject"]["Id"] = scenario_id_int;
-    core["DataTransferObject"]["FileId"] = exec_uuid;
+    core["DataTransferObject"]["FileId"] = replace_all(exec_uuid, "/", "_");
     scenario["ScenarioId"] = scenario_id_int;
 
     std::cout << "scenario_id_int: " << scenario_id_int << std::endl;
