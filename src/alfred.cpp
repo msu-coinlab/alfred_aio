@@ -679,7 +679,9 @@ bool send_json_streams(std::string scenario_id, std::string emo_uuid, std::strin
     //thrigger
 
     std::string core_path = fmt::format("lambdarequests/optimize/optimizeSce_{}.json", replace_all(exec_uuid, "/", "_"));
-    std::cout << "core_path: " << core_path << std::endl;
+    std::cout << "Original exec_uuid: " << exec_uuid << std::endl;
+    std::cout << "After replace_all: " << replace_all(exec_uuid, "/", "_") << std::endl;
+    std::cout << "Final core_path: " << core_path << std::endl;
 
     try {
         if (awss3::put_object_buffer("cast-optimization-dev", scenario_path, scenario.dump()) == false)
@@ -1127,6 +1129,9 @@ void retrieve_exec() {
             auto cerror =  fmt::format("When trying using stoi for (OPT4CAST_WAIT_MILLISECS_IN_CAST): {} ", error.what());
         }
         std::string core_path = fmt::format("lambdarequests/optimize/optimizeSce_{}.json", replace_all(exec_uuid, "/", "_"));
+        std::cout << "Original exec_uuid: " << exec_uuid << std::endl;
+        std::cout << "After replace_all: " << replace_all(exec_uuid, "/", "_") << std::endl;
+        std::cout << "Final core_path: " << core_path << std::endl;
 
         if (awss3::is_object("cast-optimization-dev", core_path) == false || 
                 now_millisec - started_time > waiting_time) 
