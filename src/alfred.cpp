@@ -638,8 +638,13 @@ bool send_json_streams(std::string scenario_id, std::string emo_uuid, std::strin
     std::string geography_str;
 
     if (redis.hexists(emo_uuid, "core") == false) {
-        create_jsons(scenario_id, emo_uuid);
+        create_jsons(scenario_id, exec_uuid);
+        std::cout << "emo_uuid: " << emo_uuid << " redis.hget(emo_uuid, \"core\") does not exist" << std::endl;
     }
+    else{
+        std::cout << "emo_uuid: " << emo_uuid << " redis.hget(emo_uuid, \"core\") exists" << std::endl;
+    }
+
     core_str = *redis.hget(emo_uuid, "core");
     scenario_str = *redis.hget(emo_uuid, "scenario");
     geography_str = *redis.hget(emo_uuid, "geography");
@@ -889,6 +894,7 @@ bool download_parquet_file(std::string base_url, std::string path, std::string b
     if (awss3::is_object("cast-optimization-dev", url) == false)
         return false;
 
+    std::cout << "Reportloads getting saved at: " << filename << std::endl;
     wait_to_download_file(url, filename, 3, 1);
 
     BareParquet::parquet_to_csv(filename, filename_csv);
@@ -1227,7 +1233,7 @@ bool solution_to_execute(std::string exec_uuid) {
     auto scenario_id = exec_list[1];
 
     if (redis.hexists(emo_uuid, "core") == false) {
-        create_jsons(scenario_id, emo_uuid);
+        create_jsons(scenario_id, exec_uuid);
     }
 
     auto core_str = *redis.hget(emo_uuid, "core");
