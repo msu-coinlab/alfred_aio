@@ -80,6 +80,15 @@ std::string get_env_var(std::string const &key, std::string const &default_value
         return val == nullptr ? std::string(default_value) : std::string(val);
 }
 
+std::string replace_all(std::string str, const std::string& from, const std::string& to) {
+        size_t start_pos = 0;
+        while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
+            str.replace(start_pos, from.length(), to);
+            start_pos += to.length(); // Move past the replacement
+        }
+        return str;
+}
+
 
 std::string REDIS_HOST = get_env_var("REDIS_HOST");
 std::string REDIS_PORT = get_env_var("REDIS_PORT");
@@ -669,7 +678,7 @@ bool send_json_streams(std::string scenario_id, std::string emo_uuid, std::strin
     std::string reportloads_path = fmt::format("data/scenarios/modeloutput/reportloads/scenarioid={}/reportloads.parquet", scenario_id);
     //thrigger
 
-    std::string core_path = fmt::format("lambdarequests/optimize/optimizeSce_{}.json", utils::replace_all(exec_uuid, "/", "_"));
+    std::string core_path = fmt::format("lambdarequests/optimize/optimizeSce_{}.json", replace_all(exec_uuid, "/", "_"));
     std::cout << "core_path: " << core_path << std::endl;
 
     try {
@@ -1117,7 +1126,7 @@ void retrieve_exec() {
             std::cout << "Error on retrieve_exec\n" << error.what() << "\n";
             auto cerror =  fmt::format("When trying using stoi for (OPT4CAST_WAIT_MILLISECS_IN_CAST): {} ", error.what());
         }
-        std::string core_path = fmt::format("lambdarequests/optimize/optimizeSce_{}.json", utils::replace_all(exec_uuid, "/", "_"));
+        std::string core_path = fmt::format("lambdarequests/optimize/optimizeSce_{}.json", replace_all(exec_uuid, "/", "_"));
 
         if (awss3::is_object("cast-optimization-dev", core_path) == false || 
                 now_millisec - started_time > waiting_time) 
