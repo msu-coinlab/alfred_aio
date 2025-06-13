@@ -767,6 +767,8 @@ bool send_submitted_land(std::string scenario_id, std::string emo_uuid, std::str
 bool send_files(std::string scenario_id, std::string emo_uuid, std::string exec_uuid) {
     fmt::print("sending files for scenario_id: {}, emo_uuid: {}, exec_uuid: {}\n", scenario_id, emo_uuid, exec_uuid);
     auto land_path = fmt::format("data/scenarios/metadata/impbmpsubmittedland/scenarioid={}/impbmpsubmittedland.parquet", scenario_id);
+    auto animal_path = fmt::format("data/scenarios/metadata/impbmpsubmittedanimal/scenarioid={}/impbmpsubmittedanimal.parquet", scenario_id);
+    auto manuretransport_path = fmt::format("data/scenarios/metadata/impbmpsubmittedmanuretransport/scenarioid={}/impbmpsubmittedmanuretransport.parquet", scenario_id);
     // if "/" in exec_uuid
     std::string land_filename;
     std::string animal_filename;
