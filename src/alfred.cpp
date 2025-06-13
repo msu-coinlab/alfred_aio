@@ -767,11 +767,30 @@ bool send_submitted_land(std::string scenario_id, std::string emo_uuid, std::str
 bool send_files(std::string scenario_id, std::string emo_uuid, std::string exec_uuid) {
     fmt::print("sending files for scenario_id: {}, emo_uuid: {}, exec_uuid: {}\n", scenario_id, emo_uuid, exec_uuid);
     auto land_path = fmt::format("data/scenarios/metadata/impbmpsubmittedland/scenarioid={}/impbmpsubmittedland.parquet", scenario_id);
-    auto land_filename = fmt::format("{}/output/nsga3/{}/{}_impbmpsubmittedland.parquet", msu_cbpo_path, emo_uuid, exec_uuid);
+    // if "/" in exec_uuid
+    std::string exec_uuid_str = exec_uuid;
+    if (exec_uuid.find("/") != std::string::npos) {
+        auto land_filename = fmt::format("{}/output/nsga3/{}_impbmpsubmittedland.parquet", msu_cbpo_path, exec_uuid);
+    }
+    else{
+        auto land_filename = fmt::format("{}/output/nsga3/{}/{}_impbmpsubmittedland.parquet", msu_cbpo_path, emo_uuid, exec_uuid_str);
+    }
+    
     auto animal_path = fmt::format("data/scenarios/metadata/impbmpsubmittedanimal/scenarioid={}/impbmpsubmittedanimal.parquet", scenario_id);
-    auto animal_filename = fmt::format("{}/output/nsga3/{}/{}_impbmpsubmittedanimal.parquet", msu_cbpo_path, emo_uuid, exec_uuid);
+    if (exec_uuid.find("/") != std::string::npos) {
+        auto animal_filename = fmt::format("{}/output/nsga3/{}_impbmpsubmittedanimal.parquet", msu_cbpo_path, exec_uuid);
+    }
+    else{
+        auto animal_filename = fmt::format("{}/output/nsga3/{}/{}_impbmpsubmittedanimal.parquet", msu_cbpo_path, emo_uuid, exec_uuid_str);
+    }
+    
     auto manuretransport_path = fmt::format("data/scenarios/metadata/impbmpsubmittedmanuretransport/scenarioid={}/impbmpsubmittedmanuretransport.parquet", scenario_id);
-    auto manuretransport_filename = fmt::format("{}/output/nsga3/{}/{}_impbmpsubmittedmanuretransport.parquet", msu_cbpo_path, emo_uuid, exec_uuid);
+    if (exec_uuid.find("/") != std::string::npos) {
+        auto manuretransport_filename = fmt::format("{}/output/nsga3/{}_impbmpsubmittedmanuretransport.parquet", msu_cbpo_path, exec_uuid);
+    }
+    else{
+        auto manuretransport_filename = fmt::format("{}/output/nsga3/{}/{}_impbmpsubmittedmanuretransport.parquet", msu_cbpo_path, emo_uuid, exec_uuid_str);
+    }
     auto file_sent = false;
 
     awss3::delete_object("cast-optimization-dev", land_path);
