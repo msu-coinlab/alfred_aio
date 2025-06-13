@@ -638,7 +638,7 @@ bool send_json_streams(std::string scenario_id, std::string emo_uuid, std::strin
     std::string geography_str;
 
     if (redis.hexists(emo_uuid, "core") == false) {
-        create_jsons(scenario_id, emo_data);
+        create_jsons(scenario_id, emo_uuid);
         std::cout << "emo_uuid: " << emo_uuid << " redis.hget(emo_uuid, \"core\") does not exist" << std::endl;
     }
     else{
