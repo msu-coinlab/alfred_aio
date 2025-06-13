@@ -660,7 +660,7 @@ bool send_json_streams(std::string scenario_id, std::string emo_uuid, std::strin
     std::cout << "scenario_id_int: " << scenario_id_int << std::endl;
     std::cout << "scenario_str: " << scenario_str << std::endl;
     std::cout << "geography_str: " << geography_str << std::endl;
-    std::cout << "core_str: " << core_str << std::endl;    
+    std::cout << "core_str: " << core.dump() << std::endl;    
 
     //std::clog<<core<<std::endl;
 
