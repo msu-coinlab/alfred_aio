@@ -638,7 +638,7 @@ bool send_json_streams(std::string scenario_id, std::string emo_uuid, std::strin
     std::string geography_str;
 
     if (redis.hexists(emo_uuid, "core") == false) {
-        create_jsons(scenario_id, exec_uuid);
+        create_jsons(scenario_id, emo_data);
         std::cout << "emo_uuid: " << emo_uuid << " redis.hget(emo_uuid, \"core\") does not exist" << std::endl;
     }
     else{
@@ -949,7 +949,7 @@ bool get_files(std::string scenario_id, std::string emo_uuid, std::string exec_u
 }
 
 bool get_files2(std::string scenario_id, std::string emo_uuid, std::string exec_uuid) {
-    bool ret = false;;
+    bool ret = false;
     std::string path = "data/scenarios/metadata";
 
     std::string land_filename = fmt::format(
@@ -985,8 +985,16 @@ bool get_files2(std::string scenario_id, std::string emo_uuid, std::string exec_
         local_report_loads = fmt::format("{}/output/nsga3/{}/config/reportloads.parquet", msu_cbpo_path, emo_uuid);
         local_report_loads_csv = fmt::format("{}/output/nsga3/{}/config/reportloads.csv", msu_cbpo_path, emo_uuid);
     } else {
-        local_report_loads = fmt::format("{}/output/nsga3/{}/{}_reportloads.parquet", msu_cbpo_path, emo_uuid, exec_uuid);
-        local_report_loads_csv = fmt::format("{}/output/nsga3/{}/{}_reportloads.csv", msu_cbpo_path, emo_uuid, exec_uuid);
+        std::string local_report_loads;
+        std::string local_report_loads_csv;
+        if (exec_uuid.find("/") != std::string::npos) {
+            local_report_loads = fmt::format("{}/output/nsga3/{}_reportloads.parquet", msu_cbpo_path, exec_uuid);
+            local_report_loads_csv = fmt::format("{}/output/nsga3/{}_reportloads.csv", msu_cbpo_path, exec_uuid);
+        }
+        else{
+            local_report_loads = fmt::format("{}/output/nsga3/{}/{}_reportloads.parquet", msu_cbpo_path, emo_uuid, exec_uuid);
+            local_report_loads_csv = fmt::format("{}/output/nsga3/{}/{}_reportloads.csv", msu_cbpo_path, emo_uuid, exec_uuid);
+        }
     }
 
     std::string path_output = fmt::format("data/scenarios/modeloutput/reportloads/scenarioid={}", scenario_id);
@@ -1059,7 +1067,12 @@ bool execute_20(std::string scenario_id, std::string emo_uuid, std::string exec_
             std::string local_report_loads_csv2 = fmt::format("{}/input/{}_reportloads.csv", msu_cbpo_path, emo_uuid);
             std::filesystem::copy(local_report_loads_csv, local_report_loads_csv2);
         } else {
-            loads_filename = fmt::format("{}/output/nsga3/{}/{}_reportloads.parquet", msu_cbpo_path, emo_uuid, exec_uuid);
+            if (exec_uuid.find("/") != std::string::npos) {
+                loads_filename = fmt::format("{}/output/nsga3/{}_reportloads.parquet", msu_cbpo_path, exec_uuid);
+            }
+            else{
+                loads_filename = fmt::format("{}/output/nsga3/{}/{}_reportloads.parquet", msu_cbpo_path, emo_uuid, exec_uuid);
+            }
         }
         auto loads = read_loads(loads_filename);
         std::cout << "Load file: " << loads_filename << std::endl;
@@ -1251,7 +1264,7 @@ bool solution_to_execute(std::string exec_uuid) {
     auto scenario_id = exec_list[1];
 
     if (redis.hexists(emo_uuid, "core") == false) {
-        create_jsons(scenario_id, exec_uuid);
+        create_jsons(scenario_id, emo_uuid);
     }
 
     auto core_str = *redis.hget(emo_uuid, "core");
