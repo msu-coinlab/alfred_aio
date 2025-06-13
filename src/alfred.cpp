@@ -934,7 +934,13 @@ bool get_files(std::string scenario_id, std::string emo_uuid, std::string exec_u
         base_filename = "septicloads";
         download_parquet_file("modeloutput", dir_path, base_filename, prefix_filename, scenario_id);
     } else {
-        std::string dir_path = fmt::format("{}/output/nsga3/{}", msu_cbpo_path, emo_uuid);
+        std::string dir_path;
+        if (exec_uuid.find("/") != std::string::npos) {
+            dir_path = fmt::format("{}/output/nsga3/", msu_cbpo_path);
+        }
+        else{
+            dir_path = fmt::format("{}/output/nsga3/{}", msu_cbpo_path, emo_uuid);
+        }
         std::string base_filename = "reportloads";
         std::string prefix_filename = fmt::format("{}_", exec_uuid);
         ret = download_parquet_file("modeloutput", dir_path, base_filename, prefix_filename, scenario_id);
